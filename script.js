@@ -936,3 +936,40 @@ function updateDishModalState(mushroom) {
         btnSell.style.transform = "none";
     }
 }
+
+
+
+/* =========================================
+   9. 图片预加载系统 (优化卡顿)
+   ========================================= */
+
+function preloadGameImages() {
+    console.log("正在后台预加载图片...");
+    
+    // 1. 静态背景图列表
+    const imageUrls = [
+        './images/plot_wood.png',
+        './images/plot_soil.png',
+        './images/plot_forest.png',
+        './images/bg_market.png'
+    ];
+
+    // 2. 自动把所有蘑菇和菜品的图片加进去
+    if (typeof MUSHROOMS !== 'undefined') {
+        MUSHROOMS.forEach(m => {
+            if (m.img) imageUrls.push(m.img);
+            if (m.dishImg) imageUrls.push(m.dishImg);
+        });
+    }
+
+    // 3. 开始加载
+    imageUrls.forEach(url => {
+        const img = new Image();
+        img.src = url;
+        // 浏览器会自动缓存这些图片
+        // 等真正用到时，直接从缓存取，速度就是 0 秒
+    });
+}
+
+// 自动执行
+preloadGameImages();
