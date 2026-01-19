@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>菌菇种植园</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- ===========================
+         界面 1：田园主界面 (Game View)
+         =========================== -->
+    <div id="view-farm" class="game-view">
+        <div class="game-container">
+            
+            <!-- 1. 左上角：UI控制区 -->
+            <div class="panel ui-area">
+                <div class="money-display">
+                    <span class="icon">💰</span>
+                    <span id="money-count">0</span>
+                </div>
+
+                <button id="btn-rules" class="btn btn-rules">
+                    📖 玩法指南
+                </button>
+
+                <button id="btn-market" class="btn btn-market">
+                    🏪 市 场
+                </button>
+
+                <button id="btn-next-month" class="btn btn-large">
+                    📅 下一个月
+                </button>
+
+                <!-- 新增：重置按钮 -->
+                <button id="btn-reset" class="btn btn-small">
+                    🔄 回到初始设定
+                </button>
+            </div>
+
+            <!-- 右上角：腐木 -->
+            <div class="panel plot" id="plot-wood" style="background-image: url('./images/plot_wood.png');">
+                <div class="plot-overlay">
+                    <!-- 上面：动态变化的文字 -->
+                    <div class="action-text">点击种植</div>
+                    <!-- 下面：永远不变的环境名 -->
+                    <div class="env-label">腐木环境</div>
+                </div>
+            </div>
+
+            <!-- 左下角：林地 -->
+            <div class="panel plot" id="plot-forest" style="background-image: url('./images/plot_forest.png');">
+                <div class="plot-overlay">
+                    <div class="action-text">点击种植</div>
+                    <!-- 👇👇👇 修改这里 👇👇👇 -->
+                    <div class="env-label">野外林地</div>
+                </div>
+            </div>
+
+            <!-- 右下角：营养土 -->
+            <div class="panel plot" id="plot-soil" style="background-image: url('./images/plot_soil.png');">
+                <div class="plot-overlay">
+                    <div class="action-text">点击种植</div>
+                    <div class="env-label">营养土环境</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ===========================
+         界面 2：市场/图鉴界面 (Market View)
+         (平时隐藏 hidden)
+         =========================== -->
+    <div id="view-market" class="market-view hidden">
+        
+        <!-- 返回按钮 (绝对定位) -->
+        <button id="btn-back-home" class="btn btn-back">
+            🏠 返回田园
+        </button>
+
+        <!-- 左半边：菌种储藏室 -->
+        <div class="market-panel left-panel">
+            <div class="market-header">🍄 菌种储藏室</div>
+            <!-- 蘑菇列表容器 (JS填充) -->
+            <div id="grid-mushrooms" class="market-grid"></div>
+        </div>
+
+        <!-- 👇👇👇 新增：中间的分割线 👇👇👇 -->
+        <div class="market-divider"></div>
+
+        <!-- 右半边：烹饪成果展 -->
+        <div class="market-panel right-panel">
+            <div class="market-header">🍽️ 烹饪成果展</div>
+            <!-- 菜品列表容器 (JS填充) -->
+            <div id="grid-dishes" class="market-grid"></div>
+        </div>
+
+    </div>
+
+    <!-- ===========================
+         全局弹窗区域 (Modals)
+         =========================== -->
+
+    <!-- 弹窗1：重置确认 (小框，红色按钮) -->
+    <div id="reset-modal" class="modal-overlay hidden">
+        <!-- 这里的 class 只有 modal-box wood-texture -->
+        <div class="modal-box wood-texture">
+            <!-- 标题加了 text-danger 变红 -->
+            <div class="modal-title text-danger">⚠️ 重新开始</div>
+            <div class="modal-content">
+                确定要回到初始设定吗？<br>
+                <span style="font-size: 0.8em; color: #666;">资金和进度将全部丢失</span>
+            </div>
+            <div class="modal-actions">
+                <button id="btn-cancel-reset" class="btn btn-cancel">取 消</button>
+                <button id="btn-confirm-reset" class="btn btn-confirm-danger">确定重置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗2：种植选择 (大框，绿色按钮) -->
+    <div id="plant-modal" class="modal-overlay hidden">
+        <!-- 注意：这里加了 wide 类，变宽 -->
+        <div class="modal-box wood-texture wide">
+            <div class="modal-title">🌱 购买菌种</div>
+        
+            <div class="modal-hint-box">
+                <p>💡 <b>种植指南：</b>请合理分配资金，错误的投资可能导致破产！</p>
+                <p>⚠️ <b>环境预警：</b>请务必确保蘑菇适应当前地块，否则下个月会枯萎。</p>
+                <p style="font-size: 12px; color: #666;">(如需查询详细生长习性与菜品利润，请点击主界面的“市场”查看图鉴)</p>
+            </div>
+
+            <!-- 3列的大图标网格 -->
+            <div id="mushroom-selection-grid" class="mushroom-grid">
+                <!-- JS 填充 -->
+            </div>
+
+            <div class="modal-actions">
+                <button id="btn-cancel-plant" class="btn btn-cancel">取 消</button>
+                <!-- 默认禁用，用的是 btn-confirm-success (绿色) -->
+                <button id="btn-confirm-plant" class="btn btn-confirm-success" disabled>
+                    确认购买 (-$0)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗3：蘑菇详情与科普 (木纹大框) -->
+    <div id="detail-modal" class="modal-overlay hidden">
+        <div class="modal-box wood-texture wide">
+            <!-- 标题 -->
+            <div id="detail-title" class="modal-title">蘑菇名称</div>
+
+            <!-- 内容区：分上下两部分 -->
+            <div class="detail-content">
+                
+                <!-- 上半部分：基本信息卡 -->
+                <div class="info-header">
+                    <!-- 左边放个大图 -->
+                    <div class="detail-img-box">
+                        <img id="detail-img" src="" alt="蘑菇图片">
+                    </div>
+                    
+                    <!-- 右边放数值属性 -->
+                    <div class="detail-stats">
+                        <div class="stat-row">
+                            <span class="label">💰 购买价格:</span>
+                            <span id="detail-cost" class="value">$0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="label">🔥 烹饪难度:</span>
+                            <span id="detail-diff" class="value">0%</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="label">🍽️ 菜品售价:</span>
+                            <span id="detail-price" class="value">$0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="label">🎒 当前拥有:</span>
+                            <span id="detail-own" class="value" style="color:#d32f2f">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 下半部分：科普文案 (羊皮纸风格) -->
+                <div class="science-box">
+                    <div class="science-title">🔬 科普档案</div>
+                    <div id="detail-intro" class="science-text">
+                        <!-- 这里会填入你的长文案 -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 按钮区 -->
+            <div class="modal-actions">
+                <button id="btn-close-detail" class="btn btn-cancel">关 闭</button>
+                
+                <!-- 烹饪按钮 (橙色) -->
+                <button id="btn-cook" class="btn btn-cook">
+                    🍳 烹饪 (拥有 0)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗4：烹饪结果 (层级最高) -->
+    <div id="result-modal" class="modal-overlay hidden" style="z-index: 2000;">
+        <div class="modal-box wood-texture">
+            <!-- 标题会根据结果变色 -->
+            <div id="result-title" class="modal-title">烹饪结果</div>
+            
+            <div class="modal-content">
+                <!-- 动态内容：显示菜品或者焦炭 -->
+                <div id="result-icon" style="font-size: 60px; margin-bottom: 10px;"></div>
+                <div id="result-text" style="font-size: 18px; line-height: 1.5;"></div>
+            </div>
+
+            <!-- 按钮区 -->
+            <div id="result-actions" class="modal-actions">
+                <!-- JS 会动态填入按钮 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗5：菜品详情与食谱 -->
+    <div id="dish-modal" class="modal-overlay hidden">
+        <div class="modal-box wood-texture wide">
+            
+            <!-- 标题 -->
+            <div id="dish-detail-title" class="modal-title">菜品详情</div>
+
+            <div class="detail-content">
+                
+                <!-- 1. 居中大图区域 -->
+                <div class="dish-showcase">
+                    <div class="dish-large-img-box">
+                        <img id="dish-detail-img" src="" alt="菜品图片">
+                    </div>
+                </div>
+                
+                <!-- 2. 下方数值区域 (居中显示) -->
+                <div class="dish-stats-row">
+                    <div class="stat-item">
+                        <span class="label">💵 售价:</span>
+                        <span id="dish-detail-price" class="value" style="color:#2e7d32;">$0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="label">🎒 库存:</span>
+                        <span id="dish-detail-own" class="value" style="color:#d32f2f;">0</span>
+                    </div>
+                </div>
+
+                <!-- 3. 菜谱区域 -->
+                <div class="science-box" style="height: 150px; margin-top: 10px;">
+                    <div class="science-title">📜 烹饪食谱</div>
+                    <div id="dish-detail-recipe" class="science-text">
+                        <!-- JS 填入菜谱 -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 按钮区 -->
+            <div class="modal-actions">
+                <button id="btn-close-dish" class="btn btn-cancel">关 闭</button>
+                <button id="btn-sell-one" class="btn btn-sell">
+                    💰 卖出一份
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗6：玩法介绍 -->
+    <div id="rule-modal" class="modal-overlay hidden">
+        <!-- ✅ 加上了 rules-box 类 -->
+        <div class="modal-box wood-texture rules-box">
+            <div class="modal-title">🍄 菌菇种植园 · 操作指南</div>
+        
+            <!-- ✅ 加上了 rules-content 和 science-text(复用滚动条样式) -->
+            <div class="modal-content science-text rules-content">
+                <p>欢迎来到<b>菌菇种植园</b>！在这里，你将体验菌种培育到餐桌美食的全过程。</p>
+            
+                <!-- ✅ 样式被提取为 rules-section-title -->
+                <div class="rules-section-title">🌱 一、环境选择</div>
+                <p>不同的真菌需要不同的基质，种错环境会导致菌种<b>次月直接枯死</b>。请参考以下标准：</p>
+                <ul>
+                    <li><b>🪵 腐木环境：</b>模拟倒伏的树干或原木。适合典型的<b>木腐菌</b>。</li>
+                    <li><b>🥡 营养土环境：</b>模拟富含腐殖质的土壤，也代表现代农业中的<b>人工培养基</b>（菌袋/瓶栽）。适合草腐菌或由于人工培育技术成熟而不再依赖原木的品种。</li>
+                    <li><b>🌲 野外林地：</b>模拟原始森林、高山草甸或灌丛。适合必须与树木根系共生的<b>外生菌根菌</b>，或生长环境极端的野生珍稀菌类。</li>
+                </ul>
+
+                <div class="rules-section-title">⏳ 二、种植与时间</div>
+                <p>1. 点击田地购买菌种，资金不足无法购买。<br>
+                    2. 点击右上角的<b>【下一个月】</b>推动时间流逝。<br>
+                    3. 蘑菇成熟后请及时<b>收割</b>（存入库存）。如果成熟后连续 2 个月未收割，蘑菇将<b>腐烂</b>，只能清理。</p>
+
+                <div class="rules-section-title">🍳 三、烹饪与经济</div>
+                <p>1. <b>生蘑菇不能直接卖钱！</b>你需要进入【市场】将其烹饪成菜品。<br>
+                    2. 烹饪存在<b>风险</b>！越昂贵的食材烹饪难度越高，一旦失败（烧糊），食材将直接损耗。<br>
+                    3. 烹饪成功的菜品可以放入【烹饪成果展】解锁图鉴，或直接<b>卖出</b>换取资金。</p>
+            
+                <!-- ✅ 底部寄语样式 -->
+                <div class="rules-footer">
+                    祝你在菌菇的世界里探索愉快！
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <!-- ✅ 棕色按钮样式 -->
+                <button id="btn-close-rules" class="btn btn-brown">
+                    关 闭
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
